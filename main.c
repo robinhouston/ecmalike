@@ -2,6 +2,7 @@
 #include <sysexits.h>
 
 #include "alg.h"
+#include "parse.h"
 
 extern struct alg *parseFile(FILE *f);
 
