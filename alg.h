@@ -33,8 +33,12 @@ struct circuit {
 
 struct alg {
     int dimension;
+
     int n_parameters;
+    int *parameters;
+
     int n_globals;
+    int *globals;
 
     struct circuit *initial;
     struct circuit *mult;

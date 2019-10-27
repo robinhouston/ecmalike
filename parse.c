@@ -47,6 +47,8 @@ void destroyCircuit(struct circuit *circuit) {
 }
 
 void destroy(struct alg *alg) {
+    free(alg->parameters);
+    free(alg->globals);
     destroyCircuit(alg->initial);
     destroyCircuit(alg->mult);
     destroyCircuit(alg->result);
@@ -68,8 +70,13 @@ void destroy(struct alg *alg) {
 struct alg *parseFile(FILE *f) {
     struct alg *alg = malloc(sizeof(struct alg));
     alg->dimension = 1;
+
     alg->n_parameters = 0;
+    alg->parameters = malloc(sizeof(int) * PARAMETERS_MAX);
+
     alg->n_globals = 0;
+    alg->globals = malloc(sizeof(int) * GLOBALS_MAX);
+
     alg->initial = NULL;
     alg->mult = NULL;
     alg->result = NULL;
@@ -129,8 +136,11 @@ struct alg *parseFile(FILE *f) {
                         if (symbol_table_get(&stab, GLOBAL, token)) {
                             die("Duplicate parameter name");
                         }
-                        symbol_table_add(&stab, GLOBAL, PARAMETER, token);
-                        alg->n_parameters += 1;
+                        slot = symbol_table_add(&stab, GLOBAL, PARAMETER, token);
+                        if (alg->n_parameters == PARAMETERS_MAX) {
+                            dief("Too many global parameters (max %d)", PARAMETERS_MAX);
+                        }
+                        alg->parameters[alg->n_parameters++] = slot;
                         break;
                     }
 
@@ -138,8 +148,11 @@ struct alg *parseFile(FILE *f) {
                         if (symbol_table_get(&stab, GLOBAL, token)) {
                             die("Duplicate global name");
                         }
-                        symbol_table_add(&stab, GLOBAL, VARIABLE, token);
-                        alg->n_globals += 1;
+                        slot = symbol_table_add(&stab, GLOBAL, VARIABLE, token);
+                        if (alg->n_globals == GLOBALS_MAX) {
+                            dief("Too many global variables (max %d)", GLOBALS_MAX);
+                        }
+                        alg->globals[alg->n_globals++] = slot;
                         break;
                     }
 
