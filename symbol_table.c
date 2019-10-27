@@ -17,7 +17,7 @@ int symbol_table_add(struct symbol_table *stab, enum scope scope, enum category 
     return s->slot;
 }
 
-int symbol_table_get(struct symbol_table *stab, enum scope scope, char *sym) {
+struct symbol *symbol_table_get_symbol(struct symbol_table *stab, enum scope scope, char *sym) {
     struct symbol *lookup_key = malloc(sizeof(struct symbol));
     struct symbol *result;
 
@@ -27,6 +27,11 @@ int symbol_table_get(struct symbol_table *stab, enum scope scope, char *sym) {
 
     HASH_FIND(hh, stab->head, &lookup_key->scope, KEYLEN, result);
     free(lookup_key);
+    return result;
+}
+
+int symbol_table_get(struct symbol_table *stab, enum scope scope, char *sym) {
+    struct symbol *result = symbol_table_get_symbol(stab, scope, sym);
     return result ? result->slot : 0;
 }
 

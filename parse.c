@@ -214,7 +214,19 @@ struct alg *parseFile(FILE *f) {
                         if (strlen(token) > IDENTIFIER_MAX) {
                             dief("Result token %s too long", token);
                         }
-                        current_assignment->result = symbol_table_add(&stab, scope, VARIABLE, token);
+
+                        struct symbol *symbol = symbol_table_get_symbol(&stab, GLOBAL, token);
+                        if (symbol) {
+                            if (symbol->category == PARAMETER) {
+                                dief("You cannot assign to global parameter '%s'", token);
+                            }
+                            slot = symbol->slot;
+                        }
+                        else {
+                            slot = symbol_table_add(&stab, scope, VARIABLE, token);
+                        }
+
+                        current_assignment->result = slot;
                         break;
                     }
 

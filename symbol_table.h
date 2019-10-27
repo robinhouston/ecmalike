@@ -50,6 +50,7 @@ struct symbol_table {
 #define KEYLEN (offsetof(struct symbol, sym) - offsetof(struct symbol, scope) + sizeof(char[IDENTIFIER_MAX + 1]))
 
 int symbol_table_add(struct symbol_table *stab, enum scope scope, enum category category, char *sym);
+struct symbol *symbol_table_get_symbol(struct symbol_table *stab, enum scope scope, char *sym);
 int symbol_table_get(struct symbol_table *stab, enum scope scope, char *sym);
 void symbol_table_cleanup(struct symbol_table *stab);
 
