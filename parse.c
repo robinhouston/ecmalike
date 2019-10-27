@@ -354,10 +354,11 @@ struct alg *parseFile(FILE *f) {
         }
     }
 
-    if (state != TOP) {
-        fprintf(stderr, "Reached end of file in state %d\n", state);
-        destroy(alg);
-        return NULL;
+    if (state == FUNCTION) {
+        dief("Function %s does not return", context);
+    }
+    else if (state != TOP) {
+        dief("The impossible happened: reached end of file in state %d", state);
     }
 
     if (ferror(f)) {
