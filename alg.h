@@ -19,13 +19,13 @@ struct assignment {
 };
 
 struct circuit {
-    int max_outputs;
-    int n_outputs;
-    int *outputs;
-
     int max_inputs;
     int n_inputs;
     int *inputs;
+
+    int max_outputs;
+    int n_outputs;
+    int *outputs;
 
     int n_assignments;
     struct assignment *assignments;
