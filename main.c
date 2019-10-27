@@ -3,6 +3,8 @@
 
 #include "alg.h"
 #include "parse.h"
+#include "prettyprint.h"
+
 
 extern struct alg *parseFile(FILE *f);
 
@@ -24,5 +26,5 @@ int main(int argc, char **argv) {
         return EX_DATAERR;
     }
 
-    printf("Parsed!\n");
+    prettyPrint(alg);
 }
