@@ -361,6 +361,10 @@ struct alg *parseFile(FILE *f) {
         dief("The impossible happened: reached end of file in state %d", state);
     }
 
+    if (!alg->initial) die("The initial function is not defined");
+    if (!alg->mult) die("The mult function is not defined");
+    if (!alg->result) die("The result function is not defined");
+
     if (ferror(f)) {
         perror(NULL);
         destroy(alg);
