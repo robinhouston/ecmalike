@@ -177,7 +177,7 @@ struct alg *parseFile(FILE *f) {
                         }
 
                         current_assignment = addAssignment(current_circuit);
-                        if (!current_circuit) {
+                        if (!current_assignment) {
                             fprintf(stderr, "Function %s too long at line %d\n", context, line_number);
                             return NULL;
                         }
