@@ -1,0 +1,4 @@
+.DS_Store
+./parse
+*.dSYM
+*.o

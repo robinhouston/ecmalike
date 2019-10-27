@@ -1,0 +1,3 @@
+dimension = -1
+
+# Expect: Dimension must be positive (not -1) at line 1

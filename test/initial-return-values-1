@@ -1,0 +1,4 @@
+def initial
+    return 1 1
+
+# Expect: Too many returned values (expected 1) at line 2
