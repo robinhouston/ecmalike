@@ -38,6 +38,33 @@ struct assignment *addAssignment(struct circuit *circuit) {
     return assignment;
 }
 
+void destroyCircuit(struct circuit *circuit) {
+    if (!circuit) return;
+    free(circuit->outputs);
+    free(circuit->inputs);
+    free(circuit->assignments);
+    free(circuit);
+}
+
+void destroy(struct alg *alg) {
+    destroyCircuit(alg->initial);
+    destroyCircuit(alg->mult);
+    destroyCircuit(alg->result);
+    free(alg);
+}
+
+#define die(message) do { \
+    fprintf(stderr, "%s at line %d\n", message, line_number); \
+    destroy(alg); \
+    return NULL; \
+} while (0)
+
+#define dief(fmt, ...) do { \
+    fprintf(stderr, fmt " at line %d\n", __VA_ARGS__, line_number); \
+    destroy(alg); \
+    return NULL; \
+} while (0)
+
 struct alg *parseFile(FILE *f) {
     struct alg *alg = malloc(sizeof(struct alg));
     alg->dimension = 1;
@@ -82,8 +109,7 @@ struct alg *parseFile(FILE *f) {
                         break;
                     }
 
-                    fprintf(stderr, "Unexpected token '%s' at line %d\n", token, line_number);
-                    return NULL;
+                    dief("Unexpected token '%s'", token);
 
                 case METADATA:
                     if (!strcmp("=", token)) {
@@ -93,9 +119,7 @@ struct alg *parseFile(FILE *f) {
                     if (!strcmp("dimension", context)) {
                         alg->dimension = atoi(token);
                         if (alg->dimension <= 0) {
-                            fprintf(stderr, "Dimension must be positive (not %d) at line %d\n",
-                                alg->dimension, line_number);
-                            return NULL;
+                            dief("Dimension must be positive (not %d)", alg->dimension);
                         }
                         state = TOP;
                         break;
@@ -103,8 +127,7 @@ struct alg *parseFile(FILE *f) {
 
                     if (!strcmp("parameter", context)) {
                         if (symbol_table_get(&stab, GLOBAL, token)) {
-                            fprintf(stderr, "Duplicate parameter name on line %d\n", line_number);
-                            return NULL;
+                            die("Duplicate parameter name");
                         }
                         symbol_table_add(&stab, GLOBAL, PARAMETER, token);
                         alg->n_parameters += 1;
@@ -113,55 +136,47 @@ struct alg *parseFile(FILE *f) {
 
                     if (!strcmp("global", context)) {
                         if (symbol_table_get(&stab, GLOBAL, token)) {
-                            fprintf(stderr, "Duplicate global name on line %d\n", line_number);
-                            return NULL;
+                            die("Duplicate global name");
                         }
                         symbol_table_add(&stab, GLOBAL, VARIABLE, token);
                         alg->n_globals += 1;
                         break;
                     }
 
-                    fprintf(stderr, "The impossible happened: state METADATA with context %s\n", context);
-                    return NULL;
+                    dief("The impossible happened: state METADATA with context %s", context);
 
                 case DEF:
                     if (scope == GLOBAL) {
                         if (!strcmp("initial", token)) {
                             if (alg->initial) {
-                                fprintf(stderr, "Redefinition of function %s on line %d\n", token, line_number);
-                                return NULL;
+                                dief("Redefinition of function %s", token);
                             }
                             alg->initial = current_circuit = newCircuit(0, alg->dimension);
                             scope = INITIAL;
                         }
                         else if (!strcmp("mult", token)) {
                             if (alg->mult) {
-                                fprintf(stderr, "Redefinition of function %s on line %d\n", token, line_number);
-                                return NULL;
+                                dief("Redefinition of function %s", token);
                             }
                             alg->mult = current_circuit = newCircuit(alg->dimension * 2, alg->dimension);
                             scope = MULT;
                         }
                         else if (!strcmp("result", token)) {
                             if (alg->result) {
-                                fprintf(stderr, "Redefinition of function %s on line %d\n", token, line_number);
-                                return NULL;
+                                dief("Redefinition of function %s", token);
                             }
                             alg->result = current_circuit = newCircuit(alg->dimension, 1);
                             scope = RESULT;
                         }
                         else {
-                            fprintf(stderr, "Unexpected function definition %s on line %d\n", token, line_number);
-                            return NULL;
+                            dief("Unexpected function definition %s", token);
                         }
                         strncpy(context, token, IDENTIFIER_MAX);
                         break;
                     }
 
                     if (current_circuit->n_inputs == current_circuit->max_inputs) {
-                        fprintf(stderr, "Too many parameters (expected %d) at line %d\n",
-                            current_circuit->max_inputs, line_number);
-                        return NULL;
+                        dief("Too many parameters (expected %d)", current_circuit->max_inputs);
                     }
 
                     slot = symbol_table_add(&stab, scope, PARAMETER, token);
@@ -178,15 +193,13 @@ struct alg *parseFile(FILE *f) {
 
                         current_assignment = addAssignment(current_circuit);
                         if (!current_assignment) {
-                            fprintf(stderr, "Function %s too long at line %d\n", context, line_number);
-                            return NULL;
+                            dief("Function %s too long", context);
                         }
                     }
 
                     if (!current_assignment->result) {
                         if (strlen(token) > IDENTIFIER_MAX) {
-                            fprintf(stderr, "Result token %s too long at line %d\n", token, line_number);
-                            return NULL;
+                            dief("Result token %s too long", token);
                         }
                         current_assignment->result = symbol_table_add(&stab, scope, VARIABLE, token);
                         break;
@@ -203,8 +216,7 @@ struct alg *parseFile(FILE *f) {
                             slot = symbol_table_get(&stab, scope, token);
                             if (!slot) slot = symbol_table_get(&stab, GLOBAL, token);
                             if (!slot) {
-                                fprintf(stderr, "Variable %s not found at line %d\n", token, line_number);
-                                return NULL;
+                                dief("Variable %s not found", token);
                             }
                         }
 
@@ -214,8 +226,7 @@ struct alg *parseFile(FILE *f) {
 
                     if (current_assignment->op == NULLOP) {
                         if (token[1] != '\0') {
-                            fprintf(stderr, "String '%s' found where operator expected at line %d\n", token, line_number);
-                            return NULL;
+                            dief("String '%s' found where operator expected", token);
                         }
                         switch(token[0]) {
                             case '+':
@@ -235,8 +246,7 @@ struct alg *parseFile(FILE *f) {
                                 break;
 
                              default:
-                                fprintf(stderr, "String '%s' found where operator expected at line %d\n", token, line_number);
-                                return NULL;
+                                dief("String '%s' found where operator expected", token);
                         }
                         break;
                     }
@@ -249,8 +259,7 @@ struct alg *parseFile(FILE *f) {
                             slot = symbol_table_get(&stab, scope, token);
                             if (!slot) slot = symbol_table_get(&stab, GLOBAL, token);
                             if (!slot) {
-                                fprintf(stderr, "Variable %s not found at line %d\n", token, line_number);
-                                return NULL;
+                                dief("Variable %s not found", token);
                             }
                         }
 
@@ -258,14 +267,11 @@ struct alg *parseFile(FILE *f) {
                         break;
                     }
 
-                    fprintf(stderr, "Unexpected token '%s' after end of statement on line %d\n", token, line_number);
-                    return NULL;
+                    dief("Unexpected token '%s' after end of statement", token);
 
                 case RETURN:
                     if (current_circuit->n_outputs == current_circuit->max_outputs) {
-                        fprintf(stderr, "Too many returned values (expected %d) at line %d\n",
-                            current_circuit->max_outputs, line_number);
-                        return NULL;
+                        dief("Too many returned values (expected %d)", current_circuit->max_outputs);
                     }
 
                     if (!strcmp("1", token)) {
@@ -275,8 +281,7 @@ struct alg *parseFile(FILE *f) {
                         slot = symbol_table_get(&stab, scope, token);
                         if (!slot) slot = symbol_table_get(&stab, GLOBAL, token);
                         if (!slot) {
-                            fprintf(stderr, "Variable %s not found at line %d\n", token, line_number);
-                            return NULL;
+                            dief("Variable %s not found", token);
                         }
                     }
 
@@ -295,14 +300,12 @@ struct alg *parseFile(FILE *f) {
                 break;
             case DEF:
                 if (!current_circuit) {
-                    fprintf(stderr, "Syntax error: def statement not followed by function name at line %d\n", line_number);
-                    return NULL;
+                    die("Syntax error: def statement not followed by function name");
                 }
 
                 if (current_circuit->n_inputs != current_circuit->max_inputs) {
-                    fprintf(stderr, "Function %s takes %d arguments at line %d\n",
-                        context, current_circuit->max_inputs, line_number);
-                    return NULL;
+                    dief("Function %s takes %d arguments",
+                        context, current_circuit->max_inputs);
                 }
 
                 state = FUNCTION;
@@ -312,9 +315,7 @@ struct alg *parseFile(FILE *f) {
             case RETURN:
                 // return statements terminate the function body
                 if (current_circuit->n_outputs != current_circuit->max_outputs) {
-                    fprintf(stderr, "Too few returned values (expected %d) at line %d\n",
-                        current_circuit->max_outputs, line_number);
-                    return NULL;
+                    dief("Too few returned values (expected %d)", current_circuit->max_outputs);
                 }
 
                 state = TOP;
@@ -333,8 +334,7 @@ struct alg *parseFile(FILE *f) {
                     || current_assignment->op == NULLOP
                     || !current_assignment->b
                 ) {
-                    fprintf(stderr, "Syntax error: incomplete assignment statement on line %d\n", line_number);
-                    return NULL;
+                    die("Syntax error: incomplete assignment statement");
                 }
                 current_assignment = NULL;
                 break;
@@ -343,11 +343,13 @@ struct alg *parseFile(FILE *f) {
 
     if (state != TOP) {
         fprintf(stderr, "Reached end of file in state %d\n", state);
+        destroy(alg);
         return NULL;
     }
 
     if (ferror(f)) {
         perror(NULL);
+        destroy(alg);
         return NULL;
     }
 
