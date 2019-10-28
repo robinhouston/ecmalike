@@ -8,10 +8,14 @@ int main(int argc, char **argv) {
         printf("%llu\n", random_odd_prime());
     }
     else {
+        // For performance testing
         int n = atoi(argv[1]);
+        uint64_t r = 0;
         for (int i = 0; i < n; ++i)
         {
-            printf("%llu\n", random_odd_prime());
+            r += random_odd_prime();
+            // printf("%llu\n", random_odd_prime());
         }
+        printf("%llu\n", r);
     }
 }
