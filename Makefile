@@ -4,4 +4,4 @@ all: parse randomprime
 
 parse: main_parse.c parse.c prettyprint.c symbol_table.c
 
-randomprime: main_randomprime.c randomprime.c
+randomprime: main_randomprime.c randomprime.c forisek_prime.c
