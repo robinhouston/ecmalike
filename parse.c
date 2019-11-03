@@ -237,6 +237,9 @@ struct alg *parseFile(FILE *f) {
                         if (!strcmp("1", token)) {
                             slot = -1;
                         }
+                        else if (!strcmp("0", token)) {
+                            slot = -2;
+                        }
                         else {
                             slot = symbol_table_get(&stab, scope, token);
                             if (!slot) slot = symbol_table_get(&stab, GLOBAL, token);
@@ -301,6 +304,9 @@ struct alg *parseFile(FILE *f) {
 
                     if (!strcmp("1", token)) {
                         slot = -1;
+                    }
+                    else if (!strcmp("0", token)) {
+                        slot = -2;
                     }
                     else {
                         slot = symbol_table_get(&stab, scope, token);
