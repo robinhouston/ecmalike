@@ -372,6 +372,12 @@ struct alg *parseFile(FILE *f) {
         }
     }
 
+    if (ferror(f)) {
+        perror(NULL);
+        destroy(alg);
+        return NULL;
+    }
+
     if (state == FUNCTION) {
         dief("Function %s does not return", context);
     }
@@ -383,11 +389,6 @@ struct alg *parseFile(FILE *f) {
     if (!alg->mult) die("The mult function is not defined");
     if (!alg->result) die("The result function is not defined");
 
-    if (ferror(f)) {
-        perror(NULL);
-        destroy(alg);
-        return NULL;
-    }
 
     symbol_table_cleanup(&stab);
     return alg;
