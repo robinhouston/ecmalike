@@ -389,7 +389,7 @@ struct alg *parseFile(FILE *f) {
     if (!alg->mult) die("The mult function is not defined");
     if (!alg->result) die("The result function is not defined");
 
-    alg->n_slots = stab.next_free_slot;
+    alg->n_slots = 1 + stab.next_free_slot;
 
     symbol_table_cleanup(&stab);
     return alg;
