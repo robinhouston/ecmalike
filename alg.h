@@ -38,6 +38,7 @@ struct alg {
     int n_parameters;
     int *parameters;
 
+    // TODO: do we need these?
     int n_globals;
     int *globals;
 
