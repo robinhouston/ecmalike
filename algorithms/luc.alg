@@ -8,7 +8,7 @@ def initial
 
 def mult a11 a12 a21 a22  b11 b12 b21 b22
     c11_1 = a11 * b11
-    c11_2 = a12 * b22
+    c11_2 = a12 * b21
     c11 = c11_1 + c11_2
 
     c12_1 = a11 * b12
