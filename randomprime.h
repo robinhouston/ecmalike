@@ -3,6 +3,6 @@
 
 #include <stdint.h>
 
-uint64_t random_odd_prime();
+uint64_t random_odd_prime(uint64_t mask);
 
 #endif

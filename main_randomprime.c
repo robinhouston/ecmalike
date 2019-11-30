@@ -5,7 +5,7 @@
 
 int main(int argc, char **argv) {
     if (argc == 1) {
-        printf("%llu\n", random_odd_prime());
+        printf("%llu\n", random_odd_prime(0));
     }
     else {
         // For performance testing
@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
         uint64_t r = 0;
         for (int i = 0; i < n; ++i)
         {
-            r += random_odd_prime();
+            r += random_odd_prime(0);
             // printf("%llu\n", random_odd_prime());
         }
         printf("%llu\n", r);
